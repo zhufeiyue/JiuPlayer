@@ -10,8 +10,8 @@ static std::unique_ptr<LogWriter> gLogWriter;
 
 int InitLogger(const char* logFileNamePrefix)
 {
-	gLogWriter = std::make_unique<LogWriter>();
-	gLogWriter = std::make_unique<LogWriterAsync1>();
+	gLogWriter.reset(new LogWriter());
+	gLogWriter.reset(new LogWriterAsync1());
 
 	if (CodeYes == gLogWriter->Init(logFileNamePrefix))
 	{
@@ -39,8 +39,6 @@ int GetLogLevel(LogLevel& level)
 static
 std::string FormatLogTimePrefix(Logger::TimePoint& now)
 {
-	now.time_since_epoch().count();
-
 	auto now_time = Logger::Clock::to_time_t(now);
 	auto diff = now - Logger::Clock::from_time_t(now_time);
 	auto mill = std::chrono::duration_cast<std::chrono::milliseconds>(diff).count();
@@ -49,7 +47,7 @@ std::string FormatLogTimePrefix(Logger::TimePoint& now)
 #ifdef _MSC_VER
 	localtime_s(&now_tm, &now_time);
 #else
-	localtime_r(&now_t, &now_tm);
+	localtime_r(&now_time, &now_tm);
 #endif
 
 	char buf[32] = { 0 };
@@ -83,7 +81,7 @@ Logger::~Logger()
 
 		if (gLogWriter)
 		{
-			gLogWriter->Do(std::move(strLog), timepoint);
+			gLogWriter->Do(strLog, timepoint);
 		}
 	}
 }
@@ -98,7 +96,7 @@ LogStream& Logger::Log()
 	return stream;
 }
 
-#ifdef _DEBUG
+#if defined DEBUG
 
 #include <atomic>
 #include <algorithm>
@@ -108,15 +106,15 @@ LogStream& Logger::Log()
 #include <list>
 int MyTestLog()
 {
-	static std::atomic<int> g = 0;
+	static std::atomic<int> g(0);
 
-	const int kCount = 1;
+	const int kCount = 20;
 	std::thread t[kCount];
 
 	for (int i = 0; i < kCount; ++i)
 	{
 		t[i] = std::thread([i]() {
-			for (int j = 0; j < 500; ++j)
+			for (int j = 0; j < 2000; ++j)
 			{
 				LOG() << "thread " << i << " print " << ++g;
 				std::this_thread::sleep_for(std::chrono::milliseconds(1));

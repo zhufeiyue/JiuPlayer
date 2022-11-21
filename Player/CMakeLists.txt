@@ -1,4 +1,4 @@
-﻿cmake_minimum_required (VERSION 3.10)
+﻿cmake_minimum_required (VERSION 3.12)
 
 set(PlayerSource main.cpp)
 
@@ -6,3 +6,4 @@ set(PlayerSource main.cpp)
 add_executable (player ${PlayerSource})
 
 target_link_libraries(player Common)
+#target_link_libraries(player Boost::date_time)
