@@ -46,7 +46,7 @@ public:
     }
 
     template<>
-    std::string DicHelper::to(std::string defaultValue) const
+    std::string to(std::string defaultValue) const
     {
         if (m_type == StoreType::DIC_STD_STRING)
         {

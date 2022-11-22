@@ -1,5 +1,6 @@
 #include <Common/Log.h>
 #include <Common/Dic.h>
+#include <Common/EventLoop.h>
 
 #ifdef DEBUG
 int MyTestLog();
@@ -7,19 +8,24 @@ int MyTestLog();
 
 int main(int argc, char* argv[])
 {
-	InitLogger("abc");
+	InitLogger("player");
 	SetLogLevel(LogLevel::Info);
 
-	LOG() << "123";
-	LOG_WARNING() << "456";
-	LOG_ERROR() << "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss";
+	EventLoop loop;
 
-	Dic dic;
-	dic.insert("123", "10");
-	dic.insert("456", 11);
+	loop.Queue().ScheduleTimer([&loop]() 
+		{
+			static int n = 0;
+			LOG() << "sd " << n++;
+			if (n > 200)
+			{
+				loop.Exit();
+			}
 
-	auto n = dic.get<std::string>("123");
-	auto m = dic.get<int>("456");
+			return CodeYes;
+		}, 40, true);
+
+	loop.Run();
 
 	return 0;
 }

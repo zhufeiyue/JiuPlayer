@@ -106,6 +106,10 @@ DicHelper& DicHelper::operator=(DicHelper&& r)
                 m_store.ptr = r.m_store.ptr;
                 r.m_store.ptr = nullptr;
             }
+            else
+            {
+                m_store.i64 = r.m_store.i64;
+            }
         }
     }
     return *this;

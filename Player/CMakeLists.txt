@@ -6,4 +6,4 @@ set(PlayerSource main.cpp)
 add_executable (player ${PlayerSource})
 
 target_link_libraries(player Common)
-#target_link_libraries(player Boost::date_time)
+target_link_libraries(player ${Boost_LIBRARIES})
