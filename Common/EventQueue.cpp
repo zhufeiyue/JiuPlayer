@@ -1,40 +1,53 @@
 #include "EventQueue.h"
 #include "Log.h"
 
-static void handleTimer(const boost::system::error_code& err,
-	boost::asio::steady_timer* pTimer,
-	Fn&& fn,
-	int mill,
-	bool repeat)
+struct TimerHelper
 {
-	int isContinue = fn();
-	if (repeat && isContinue == CodeYes)
+	int  interval;
+	bool repeat;
+	Fn   fn;
+	boost::asio::steady_timer timer;
+	
+	TimerHelper(boost::asio::io_context& context, int mill) :
+		interval(mill),
+		timer(context, boost::asio::chrono::milliseconds(mill))
 	{
-		pTimer->expires_at(pTimer->expiry() + boost::asio::chrono::milliseconds(mill));
-		pTimer->async_wait(
-			[temp = std::move(fn), mill, repeat, pTimer](const boost::system::error_code& err) mutable
-		{
-			handleTimer(err, pTimer, std::forward<Fn>(temp), mill, repeat);
-		});
 	}
-	else
+};
+
+static void handleTimer(std::shared_ptr<TimerHelper> p, const boost::system::error_code& err)
+{
+	if (err)
 	{
-		delete pTimer;
+		LOG() << err.message();
+		return;
+	}
+
+	if (p->repeat && (p->fn)() == CodeYes)
+	{
+		p->timer.expires_at(p->timer.expiry() + std::chrono::milliseconds(p->interval));
+		p->timer.async_wait([p](const boost::system::error_code& err) 
+			{
+				handleTimer(p, err);
+			});
 	}
 }
 
 int EventQueue::ScheduleTimer(Fn&& fn, int mill, bool repeat)
 {
-	auto pTimer = new boost::asio::steady_timer(m_context, 
-		boost::asio::chrono::milliseconds(mill));
-
-	if (pTimer)
+	auto p = std::make_shared<TimerHelper>(m_context, mill);
+	if (!fn || !p)
 	{
-		pTimer->async_wait([f = std::move(fn), mill, repeat, pTimer](const boost::system::error_code& err) mutable
-		{
-			handleTimer(err, pTimer, std::forward<Fn>(f), mill, repeat);
-		});
+		LOG() << __FUNCTION__;
+		return -1;
 	}
+
+	p->fn = std::move(fn);
+	p->repeat = repeat;
+	p->timer.async_wait([p](const boost::system::error_code& err) 
+		{
+			handleTimer(p, err);
+		});
 
 	return 0;
 }
@@ -59,5 +72,5 @@ int EventQueue::PopEvent()
 		return -1;
 	}
 
-	return n;
+	return (int)n;
 }
