@@ -13,10 +13,6 @@ EventLoop::~EventLoop()
 int EventLoop::Run()
 {
 	LOG() << "event loop start";
-	if (m_bRunning)
-	{
-		return -1;
-	}
 	m_bRunning = true;
 
 	int n = 0;

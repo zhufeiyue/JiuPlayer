@@ -5,6 +5,7 @@ list(APPEND CommonSourceFile LogWriter.h LogWriter.cpp)
 list(APPEND CommonSourceFile Dic.h Dic.cpp)
 list(APPEND CommonSourceFile EventQueue.h EventQueue.cpp)
 list(APPEND CommonSourceFile EventLoop.h EventLoop.cpp)
+aux_source_directory(Net CommonSourceFile)
 
 if(MSVC)
     add_definitions( -bigobj)

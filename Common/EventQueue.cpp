@@ -6,16 +6,16 @@ struct TimerHelper
 	int  interval;
 	bool repeat;
 	Fn   fn;
-	boost::asio::steady_timer timer;
+	asio::steady_timer timer;
 	
-	TimerHelper(boost::asio::io_context& context, int mill) :
+	TimerHelper(asio::io_context& context, int mill) :
 		interval(mill),
-		timer(context, boost::asio::chrono::milliseconds(mill))
+		timer(context, asio::chrono::milliseconds(mill))
 	{
 	}
 };
 
-static void handleTimer(std::shared_ptr<TimerHelper> p, const boost::system::error_code& err)
+static void handleTimer(std::shared_ptr<TimerHelper> p, const system::error_code& err)
 {
 	if (err)
 	{
@@ -26,7 +26,7 @@ static void handleTimer(std::shared_ptr<TimerHelper> p, const boost::system::err
 	if (p->repeat && (p->fn)() == CodeYes)
 	{
 		p->timer.expires_at(p->timer.expiry() + std::chrono::milliseconds(p->interval));
-		p->timer.async_wait([p](const boost::system::error_code& err) 
+		p->timer.async_wait([p](const system::error_code& err) 
 			{
 				handleTimer(p, err);
 			});
@@ -44,7 +44,7 @@ int EventQueue::ScheduleTimer(Fn&& fn, int mill, bool repeat)
 
 	p->fn = std::move(fn);
 	p->repeat = repeat;
-	p->timer.async_wait([p](const boost::system::error_code& err) 
+	p->timer.async_wait([p](const system::error_code& err) 
 		{
 			handleTimer(p, err);
 		});
@@ -56,14 +56,14 @@ int EventQueue::PushEvent(Fn&& fn)
 {
 	if (fn)
 	{
-		boost::asio::post(m_context, std::forward<Fn>(fn));
+		asio::post(m_context, std::forward<Fn>(fn));
 	}
 	return 0;
 }
 
 int EventQueue::PopEvent()
 {
-	boost::system::error_code err;
+	system::error_code err;
 
 	auto n = m_context.poll(err);
 	if (err)

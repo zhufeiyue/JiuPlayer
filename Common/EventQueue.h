@@ -5,6 +5,7 @@
 #include <functional>
 #include <boost/asio.hpp>
 
+using namespace boost;
 typedef std::function<int()> Fn;
 
 class EventQueue
@@ -17,10 +18,13 @@ public:
 	EventQueue(EventQueue&&) = delete;
 	EventQueue& operator=(EventQueue&&) = delete;
 
+	asio::io_context& Context() {
+		return m_context;
+	}
 	int ScheduleTimer(Fn&&, int mill, bool repeat);
 	int PushEvent(Fn&&);
 	int PopEvent();
 
 private:
-	boost::asio::io_context m_context;
+	asio::io_context m_context;
 };
